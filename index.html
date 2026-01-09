@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lu Qi - COS Lab: Coding Olfactory Space</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .hero-image {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .hero-image.active {
+            opacity: 1;
+        }
+        
+        .news-item:hover {
+            background-color: #f9fafb;
+        }
+        
+        .publication-card {
+            transition: all 0.2s ease;
+        }
+        
+        .publication-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* BibTeX Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .bibtex-content {
+            background-color: #f5f5f5;
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Image Carousel Styles */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            height: 160px;
+            overflow: hidden;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+        }
+
+        .carousel-image {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .carousel-image.active {
+            opacity: 1;
+        }
+
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: 4px;
+            z-index: 10;
+            transition: background-color 0.2s;
+        }
+
+        .carousel-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .carousel-button.prev {
+            left: 0.5rem;
+        }
+
+        .carousel-button.next {
+            right: 0.5rem;
+        }
+
+        .carousel-indicators {
+            position: absolute;
+            bottom: 0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 10;
+        }
+
+        .carousel-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .carousel-indicator.active {
+            background-color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-white">
+    <!-- Header -->
+    <header id="header" class="fixed top-0 left-0 right-0 bg-white z-50 shadow-md transition-shadow duration-300">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <button onclick="scrollToSection('hero')" class="flex items-start gap-3 group">
+                    <div class="flex flex-col items-start">
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-black bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent drop-shadow-sm" style="font-family: system-ui, -apple-system, sans-serif; letter-spacing: -0.02em; font-size: 1.125rem; font-weight: 700;">
+                                Qilu's home page
+                            </span>
+                        </div>
+                        <div class="flex flex-col items-start mt-1">
+                            <span class="text-gray-600 text-left" style="font-size: 0.65rem; letter-spacing: 0.02em;">
+                                COS Lab - Coding Olfactory Space
+                            </span>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex space-x-8">
+                    <button onclick="scrollToSection('hero')" class="text-gray-700 hover:text-teal-600 transition-colors">Home</button>
+                    <button onclick="scrollToSection('about')" class="text-gray-700 hover:text-teal-600 transition-colors">About</button>
+                    <button onclick="scrollToSection('research')" class="text-gray-700 hover:text-teal-600 transition-colors">Research</button>
+                    <button onclick="scrollToSection('vision')" class="text-gray-700 hover:text-teal-600 transition-colors">Vision</button>
+                    <button onclick="scrollToSection('news')" class="text-gray-700 hover:text-teal-600 transition-colors">News</button>
+                    <button onclick="scrollToSection('publications')" class="text-gray-700 hover:text-teal-600 transition-colors">Publications</button>
+                    <button onclick="scrollToSection('team')" class="text-gray-700 hover:text-teal-600 transition-colors">Team</button>
+                    <button onclick="scrollToSection('joinus')" class="text-gray-700 hover:text-teal-600 transition-colors">Join Us</button>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" id="mobile-menu-btn" class="text-gray-700 hover:text-teal-600">
+                        <svg id="menu-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div id="mobile-menu" class="hidden md:hidden py-4 space-y-2">
+                <button onclick="scrollToSection('hero'); toggleMobileMenu()" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors">Home</button>
+                <button onclick="scrollToSection('about'); toggleMobileMenu()" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors">About</button>
+                <button onclick="scrollToSection('research'); toggleMobileMenu()" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors">Research</button>
+                <button onclick="scrollToSection('vision'); toggleMobileMenu()" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors">Vision</button>
+                <button onclick="scrollToSection('news'); toggleMobileMenu()" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors">News</button>
+                <button onclick="scrollToSection('publications'); toggleMobileMenu()" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors">Publications</button>
+                <button onclick="scrollToSection('team'); toggleMobileMenu()" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors">Team</button>
+                <button onclick="scrollToSection('joinus'); toggleMobileMenu()" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-colors">Join Us</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="pt-16">
+        <!-- Hero Section -->
+        <section id="hero" class="relative">
+            <div class="relative w-full overflow-hidden" style="aspect-ratio: 32/9;">
+                <!-- Background image carousel -->
+                <img src="./images/hero1.png" alt="Olfactory Device Components and Sensors" class="hero-image active" id="hero-img-0">
+                <img src="./images/hero2.png" alt="Olfactory Research Equipment Layout" class="hero-image" id="hero-img-1">
+                <img src="./images/hero3.png" alt="Mul-O Software System Architecture" class="hero-image" id="hero-img-2">
+                <img src="./images/hero4.png" alt="Interactive Olfactory Experiment Scenarios" class="hero-image" id="hero-img-3">
+                <img src="./images/hero5.png" alt="Modular Olfactory Device Design" class="hero-image" id="hero-img-4">
+                <img src="./images/hero6.png" alt="Advanced Olfactory Display System" class="hero-image" id="hero-img-5">
+                
+                <!-- Navigation buttons -->
+                <button onclick="prevImage()" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <button onclick="nextImage()" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+                
+                <!-- Indicator dots -->
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    <button onclick="goToImage(0)" class="indicator-dot w-8 h-2 bg-white rounded-full transition-all"></button>
+                    <button onclick="goToImage(1)" class="indicator-dot w-2 h-2 bg-white/50 hover:bg-white/75 rounded-full transition-all"></button>
+                    <button onclick="goToImage(2)" class="indicator-dot w-2 h-2 bg-white/50 hover:bg-white/75 rounded-full transition-all"></button>
+                    <button onclick="goToImage(3)" class="indicator-dot w-2 h-2 bg-white/50 hover:bg-white/75 rounded-full transition-all"></button>
+                    <button onclick="goToImage(4)" class="indicator-dot w-2 h-2 bg-white/50 hover:bg-white/75 rounded-full transition-all"></button>
+                    <button onclick="goToImage(5)" class="indicator-dot w-2 h-2 bg-white/50 hover:bg-white/75 rounded-full transition-all"></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="mb-8 pb-2 border-b border-black">About Me</h2>
+                
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="md:col-span-1">
+                        <img src="./images/profile.jpg" alt="Lu Qi" class="w-3/4 aspect-square object-cover rounded mb-4">
+                        <div style="font-size: 14px; line-height: 1.6;">
+                            <p class="mb-2"><strong>Qi Lu</strong></p>
+                            <p class="text-gray-600 mb-2">Research Assistant Professor</p>
+                            <p class="text-gray-600 mb-4">The Future Laboratory, Tsinghua University</p>
+                            
+                            <p class="mb-1">
+                                <strong>Email:</strong> <a href="mailto:luq@mail.tsinghua.edu.cn" class="text-teal-600 hover:text-teal-800">luq@mail.tsinghua.edu.cn</a>
+                            </p>
+                            <p class="mb-4">
+                                <strong>Phone:</strong> +86 186-1203-9524
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <div class="space-y-4" style="font-size: 14px; line-height: 1.6;">
+                            <div class="mb-4">
+                                <p class="text-teal-600 mb-3" style="font-size: 13px;">
+                                    I am currently an assistant professor at The Future Laboratory of Tsinghua University, and leading the <strong>COS (Coding Olfactory Space) Lab</strong> research group.
+                                </p>
+                                <p class="text-gray-700 mb-3">
+                                    My work focuses on olfactory computing, multisensory HCI, and intelligent olfaction technologies powered by electronic noses (e-noses) and olfactory displays. I am particularly interested in how smell can become a computable modality&mdash;something intelligent systems can sense, reason about, generate, and use in interaction.
+                                </p>
+                            </div>
+
+                            <h3 class="mb-3">Research Fields</h3>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Multisensory Human-Computer Interaction (HCI)</li>
+                                <li>Olfactory Computing</li>
+                                <li>Artificial Olfaction (Electronic Nose)</li>
+                                <li>Multimodal Embodied Interaction</li>
+                                <li>Tangible User Interface</li>
+                            </ul>
+                            
+                            <h3 class="mt-6 mb-3">Education & Experience</h3>
+                            <div class="space-y-3 text-gray-700">
+                                <div>
+                                    <p><strong>Research Assistant Professor</strong></p>
+                                    <p>The Future Laboratory, Tsinghua University, 2023 - Present</p>
+                                </div>
+                                <div>
+                                    <p><strong>Postdoctoral Researcher</strong></p>
+                                    <p>The Future Laboratory, Tsinghua University, 2021 - 2023</p>
+                                </div>
+                                <div>
+                                    <p><strong>Ph.D. in Design</strong></p>
+                                    <p>Tsinghua University, 2017 - 2020</p>
+                                </div>
+                                <div>
+                                    <p><strong>M.S. in Information Art and Design (Interdisciplinary)</strong></p>
+                                    <p>Tsinghua University, 2014 - 2017</p>
+                                </div>
+                                <div>
+                                    <p><strong>B.S. in Electronic Engineering</strong></p>
+                                    <p>Tsinghua University, 2010 - 2014</p>
+                                </div>
+                            </div>
+                            
+                            <h3 class="mt-6 mb-3">Academic Affiliations</h3>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Senior Member, China Computer Federation (CCF)</li>
+                                <li>Executive Member, CCF Technical Committee on Human-Computer Interaction</li>
+                                <li>Founding Member, Chinese Association for Chemosensation (CAChe)</li>
+                            </ul>
+
+                            <h3 class="mt-6 mb-3">Selected Honors & Awards</h3>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li>Best Paper Award, UIST 2025</li>
+                                <li>Best Paper Honorable Mention, DIS 2020</li>
+                                <li>First Speakers Lineup, 8th World Digital Olfaction Society Conference (DOS), 2024</li>
+                                <li>Outstanding PhD Graduate of Beijing, 2020</li>
+                                <li>First-class Scholarship, Tsinghua University, 2019</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Research & News Section -->
+        <section id="research" class="py-16 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-12 gap-8">
+                    <!-- Research Projects (Left Column - 8 columns) -->
+                    <div class="col-span-12 md:col-span-8">
+                        <h2 class="mb-8 pb-2 border-b border-black" style="line-height: 1.2;">Research</h2>
+                        
+                        <div class="space-y-8" id="research-list">
+                            <!-- Research projects will be dynamically loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Vision & News (Right Column - 4 columns) -->
+                    <div class="col-span-12 md:col-span-4">
+                        <h2 id="vision" class="mb-8 pb-2 border-b border-black" style="line-height: 1.2;">Vision</h2>
+                        
+                        <div class="mb-8 space-y-6" style="font-size: 14px; line-height: 1.6;">
+                            <div>
+                                <p class="text-gray-700 mb-4">
+                                    At COS Lab, we explore a fundamental question:
+                                </p>
+                                <p class="text-gray-700 mb-6 italic text-lg">
+                                    What new forms of interaction and intelligence emerge when future robots, virtual environments, and computing systems can truly "smell" and "express" odors?
+                                </p>
+                                <p class="text-gray-700">
+                                    My long-term vision is to establish olfaction as a core capability in embodied and multisensory intelligent systems, enabling richer, more immersive, and more human-centered computational experiences.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <h2 id="news" class="text-2xl font-bold mb-6 pb-2 border-b border-black">News</h2>
+                        
+                        <div style="max-height: 800px; overflow-y: auto;" class="space-y-4 pr-2" id="news-list">
+                            <!-- News items will be dynamically loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Publications Section -->
+        <section id="publications" class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="mb-8 pb-2 border-b border-black">Publications</h2>
+                <div id="publications-list">
+                    <!-- Publications will be dynamically loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Team Section (NO Alumni) -->
+        <section id="team" class="py-16 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="mb-8 pb-2 border-b border-black">Team</h2>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8" id="current-team">
+                    <!-- Current team members will be dynamically loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Join Us Section -->
+        <section id="joinus" class="py-16 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="mb-4 pb-2 border-b border-black">Join Us</h2>
+                
+                <p class="text-gray-700 mb-12 italic" style="font-size: 16px; line-height: 1.6;">
+                    Exploring the Future of Olfactory Intelligence & Multimodal Interaction
+                </p>
+                
+                <div class="mb-12">
+                    <p class="text-gray-700" style="font-size: 14px; line-height: 1.8;">
+                        <strong>Positions Available: Research Assistants / Interns / Postdoctoral Fellows</strong> — We welcome applicants from Computer Science, Electronics, Automation, Mechanical Engineering, Materials Science, Chemistry, Artificial Intelligence, Human-Computer Interaction, and related fields.
+                    </p>
+                </div>
+                
+                <div class="mb-12">
+                    <h3 class="mb-4 pb-2 border-b border-gray-300">We Are Looking for Skills In</h3>
+                    
+                    <p class="text-gray-600 mb-6 italic" style="font-size: 13px;">
+                        You don't need all of these – we welcome anyone with relevant expertise and passion!
+                    </p>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-teal-600 mb-2" style="font-size: 14px; font-weight: 600;">
+                                Programming & Algorithms
+                            </h4>
+                            <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                Python, C++, MATLAB, Machine Learning, Deep Learning, Model Optimization
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-teal-600 mb-2" style="font-size: 14px; font-weight: 600;">
+                                Hardware & Systems
+                            </h4>
+                            <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                Sensor Integration, Circuit Design, Embedded Systems, Mechanical Design & Prototyping
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-teal-600 mb-2" style="font-size: 14px; font-weight: 600;">
+                                Signals & Data
+                            </h4>
+                            <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                Signal Processing, Pattern Recognition, Data Analysis & Visualization
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-teal-600 mb-2" style="font-size: 14px; font-weight: 600;">
+                                Interaction & Design
+                            </h4>
+                            <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                HCI, UX Design, Multimodal Interaction Systems
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-teal-600 mb-2" style="font-size: 14px; font-weight: 600;">
+                                Chemistry & Materials
+                            </h4>
+                            <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                Gas Sensing Principles, Material Fabrication & Characterization, VOC Detection
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-teal-600 mb-2" style="font-size: 14px; font-weight: 600;">
+                                Research & Innovation
+                            </h4>
+                            <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                Literature Review, Experiment Design, Academic Writing, Conference Participation
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-12">
+                    <h3 class="mb-4 pb-2 border-b border-gray-300">Research Topics</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-white p-5 rounded-lg border-l-4 border-teal-500">
+                            <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                Embodied Olfactory Interaction: Endowing robots with the "sense of smell" for environmental perception, understanding, and collaboration
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white p-5 rounded-lg border-l-4 border-teal-500">
+                            <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                Multimodal Sensing Device Development: Integrating olfactory, visual, and tactile sensing into innovative hardware
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white p-5 rounded-lg border-l-4 border-teal-500">
+                            <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                Olfactory Recognition Algorithms: Applying AI to decode complex odors, bridging data and cognition
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-12">
+                    <h3 class="mb-4 pb-2 border-b border-gray-300">What You Will Gain</h3>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="flex items-start gap-3">
+                            <div class="text-teal-600 mt-1" style="font-size: 18px;">•</div>
+                            <div>
+                                <h4 class="text-gray-900 mb-1" style="font-size: 14px; font-weight: 600;">
+                                    Cutting-edge Research Projects
+                                </h4>
+                                <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                    Collaborate on frontier interdisciplinary topics
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-3">
+                            <div class="text-teal-600 mt-1" style="font-size: 18px;">•</div>
+                            <div>
+                                <h4 class="text-gray-900 mb-1" style="font-size: 14px; font-weight: 600;">
+                                    Hands-on Innovation
+                                </h4>
+                                <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                    Engage in all stages from prototyping to system integration
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-3">
+                            <div class="text-teal-600 mt-1" style="font-size: 18px;">•</div>
+                            <div>
+                                <h4 class="text-gray-900 mb-1" style="font-size: 14px; font-weight: 600;">
+                                    Publications & Achievements
+                                </h4>
+                                <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                    Opportunities to publish in top conferences and journals
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-3">
+                            <div class="text-teal-600 mt-1" style="font-size: 18px;">•</div>
+                            <div>
+                                <h4 class="text-gray-900 mb-1" style="font-size: 14px; font-weight: 600;">
+                                    Academic Resources
+                                </h4>
+                                <p class="text-gray-700" style="font-size: 13px; line-height: 1.5;">
+                                    Access to advanced facilities and international collaboration opportunities
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-teal-600 text-white p-6 rounded-lg mb-16">
+                    <h3 class="mb-4" style="font-size: 16px; font-weight: 600;">
+                        How to Apply
+                    </h3>
+                    <p class="mb-2" style="font-size: 14px; line-height: 1.6;">
+                        Send your CV to <a href="mailto:luq@mail.tsinghua.edu.cn" class="underline hover:text-teal-100">luq@mail.tsinghua.edu.cn</a>
+                    </p>
+                    <p style="font-size: 14px; line-height: 1.6;">
+                        Subject line: "Application – RA/Intern/Postdoc – Your Name"
+                    </p>
+                </div>
+
+                <!-- Contact Us Section -->
+                <div class="mt-16">
+                    <h2 class="mb-8 pb-2 border-b border-black">Contact Us</h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="mb-4 text-teal-600" style="font-size: 16px; font-weight: 600;">
+                                Lab Address
+                            </h3>
+                            
+                            <div class="space-y-2 mb-6" style="font-size: 14px; line-height: 1.8;">
+                                <p class="text-gray-900"><strong>COS Lab: Coding Olfactory Space</strong></p>
+                                <p class="text-gray-700">Building A, Shuangqing Multi-purpose Building</p>
+                                <p class="text-gray-700">Tsinghua University</p>
+                                <p class="text-gray-700">No.1 Qinghuayuan, Haidian District, Beijing, China</p>
+                                <p class="text-gray-700">Postcode: 100084</p>
+                            </div>
+                            
+                            <h3 class="mb-4 text-teal-600" style="font-size: 16px; font-weight: 600;">
+                                Contact Information
+                            </h3>
+                            
+                            <div class="space-y-2" style="font-size: 14px; line-height: 1.8;">
+                                <p class="text-gray-700">
+                                    Email: <a href="mailto:luq@mail.tsinghua.edu.cn" class="text-teal-600 hover:text-teal-800">luq@mail.tsinghua.edu.cn</a>
+                                </p>
+                                <p class="text-gray-600 mt-4" style="font-size: 13px; line-height: 1.6;">
+                                    We welcome academic exchanges, project collaborations, and any inquiries about the lab. We typically respond to emails within 1-2 business days.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="rounded-lg overflow-hidden" style="min-height: 400px;">
+                            <iframe
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3058.0123456789!2d116.3252!3d40.0034!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x35f05296b9f4b5d9%3A0x7e1f4d0c5c4b5e4d!2sTsinghua%20University!5e0!3m2!1sen!2scn!4v1234567890123!5m2!1sen!2scn"
+                                width="100%"
+                                height="400"
+                                style="border: 0;"
+                                allowfullscreen
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                title="Tsinghua University Location Map"
+                            ></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p class="mb-2 text-sm">&copy; 2025 COS Lab - Coding Olfactory Space. All rights reserved.</p>
+                <p class="text-gray-400 text-xs">Tsinghua University, Beijing, China</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- BibTeX Modal -->
+    <div id="bibtex-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">BibTeX Citation</h3>
+                <button onclick="closeBibtexModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="bibtex-content" id="bibtex-content"></div>
+            <div class="flex gap-2 mt-4">
+                <button onclick="copyBibtex()" class="flex-1 bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition-colors">
+                    Copy
+                </button>
+                <button onclick="downloadBibtex()" class="flex-1 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors">
+                    Download .bib
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./data.js"></script>
+    <script src="./main.js"></script>
+</body>
+</html>
